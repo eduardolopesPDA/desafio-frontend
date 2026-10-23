@@ -1,45 +1,48 @@
 ---
 name: create-feature
-description: Implementa uma funcionalidade nova na extensão (WXT + React + TanStack + Tailwind) de ponta a ponta — do requisito em docs/product.md até código tipado, testado e registrado no roadmap. Use sempre que o usuário pedir para criar, adicionar ou implementar uma feature, tela, fluxo ou requisito do desafio, ou digitar /create-feature. Para só criar uma rota ou só uma tabela, prefira /create-route ou /create-table.
+description: Implementa uma funcionalidade do CN Toon Vault de ponta a ponta — contrato, mock, transporte (Axios), estado (TanStack Query), tela (Router + shadcn/ui) e testes — seguindo a arquitetura por features. Use sempre que o usuário pedir para criar, adicionar ou implementar uma feature, tela, fluxo ou requisito do spec, ou digitar /create-feature. Para só uma rota, prefira /create-route; para só um mock, /create-mock.
 ---
 
 # Criar feature
 
-O objetivo é entregar uma funcionalidade pequena, completa e verificável, no lugar
-certo da arquitetura. Feature "pronta" significa: atende ao requisito escrito,
-compila, tem teste da lógica e funciona no popup de verdade — não só no teste.
+Uma feature só está pronta quando funciona **pela rede**: a tela consome uma query, a
+query chama o Axios, o Axios bate no MSW, e o MSW responde conforme o contrato. Atalhos
+(dados fixos no componente, setters chamados direto) são eliminatórios no spec. A ordem
+abaixo existe para que cada camada seja construída sobre algo que já funciona.
 
 ## 1. Partir do requisito
 
-Leia `docs/product.md`. Se o que foi pedido não estiver lá, adicione o requisito
-(em uma ou duas linhas, com critério de aceite) antes de codar — assim a próxima
-sessão sabe por que esse código existe. Se o pedido for ambíguo, pergunte em vez de
-adivinhar.
+Leia a seção correspondente em `docs/spec.md` e marque mentalmente cada estado exigido:
+carregamento, vazio, erro, sucesso, atualização em segundo plano e os cenários de falha
+listados no §6. Leia `ARCHITECTURE.md` para saber onde cada parte fica. Se o requisito
+for ambíguo, pergunte em vez de adivinhar.
 
-Leia também `docs/architecture.md` para saber onde cada parte deve ficar.
+## 2. Implementar de baixo para cima
 
-## 2. Implementar de dentro para fora
+1. **Contrato** — schemas zod em `src/contracts/` (request, response, erros). Atualize
+   `docs/contracts.md`.
+2. **Mock** — handler, fixtures e cenários de falha em `src/mocks/` (skill `create-mock`).
+3. **Transporte** — funções em `src/features/<domínio>/api.ts` usando a instância Axios
+   de `lib/http`, repassando o `signal` e validando a resposta com o schema.
+4. **Estado** — `queryOptions`/mutations em `src/features/<domínio>/queries.ts`, com
+   query keys por factory e a política de `ARCHITECTURE.md` §4.
+5. **Lógica pura** em `src/lib/` (ex.: cálculo com `lib/money`), com teste unitário.
+6. **Componentes** em `src/features/<domínio>/components/`, com shadcn/ui adaptado ao tema.
+7. **Tela** — rota em `src/routes/` (skill `create-route`).
 
-Comece pelo que é mais fácil de testar e menos acoplado:
-
-1. **Tipos** em `src/types/` — só se forem usados por mais de um arquivo; senão,
-   deixe ao lado de quem usa.
-2. **Lógica pura** em `src/lib/` (cálculo, filtro, formatação, dados mock), com
-   teste ao lado. Lógica fora do JSX é o que mantém os componentes simples.
-3. **Componentes** em `src/components/`. Eles não importam nada de `src/routes/`.
-4. **Tela nova** → siga a skill `create-route`.
-5. **Tabela** → siga a skill `create-table`.
-
-Não crie abstrações, props ou opções que o requisito não pede (YAGNI).
+Não crie abstrações, props ou opções que o spec não pede (YAGNI).
 
 ## 3. Verificar
 
-1. `npm run compile` e `npm test -- --run`.
-2. `npm run dev` e teste o fluxo no popup. Lembre que o popup tem ~400px de largura.
-3. Informe o resultado real, inclusive falhas.
+1. Tipos e testes unitários: `npm run compile` e `npm test -- --run`.
+2. Na web (`npm run dev:web`), percorra o fluxo nos viewports 390, 768 e 1440 e com os
+   cenários de falha (`?scenario=…`).
+3. Confira teclado, foco e leitor de tela nos estados novos.
+4. Escreva ou atualize o E2E correspondente (skill `e2e-test`).
+5. Informe o resultado real, inclusive falhas.
 
 ## 4. Registrar
 
 - Marque o item em `docs/roadmap.md`.
-- Registre em `docs/decisions.md` qualquer escolha não óbvia (biblioteca nova,
-  permissão nova, desvio da arquitetura).
+- Registre em `docs/decisions.md` qualquer escolha não óbvia.
+- Se a feature criou cenário de mock novo, documente no `README.md`.

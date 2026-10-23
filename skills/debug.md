@@ -1,40 +1,51 @@
 ---
 name: debug
-description: Investiga e corrige bugs na extensão Chrome (WXT + React + TanStack + Tailwind), incluindo popup em branco, rota que não carrega, estilo que não aplica, tabela em loop e erros de tipo do WXT. Use sempre que o usuário relatar erro, comportamento inesperado, tela em branco, algo "não funciona", ou digitar /debug.
+description: Investiga e corrige bugs no CN Toon Vault — extensão (WXT) ou web (Vite), MSW que não intercepta, Socket.IO que não entrega eventos, cache do TanStack Query desatualizado ou vazando entre usuários, rotas e search params, layout quebrado em algum viewport. Use sempre que o usuário relatar erro, comportamento inesperado, tela em branco, algo "não funciona", ou digitar /debug.
 ---
 
-# Debug de extensão
+# Debug
 
-Extensão tem mais de um contexto de execução (popup, service worker, páginas), cada
-um com seu próprio DevTools. Boa parte do tempo perdido em debug vem de olhar o
-console errado. Reproduza primeiro, encontre a causa e só então corrija.
+O projeto tem várias camadas entre o clique e o dado (UI → Query → Axios → MSW → db) e
+dois alvos de build. A maior parte do tempo perdido vem de corrigir a camada errada.
+Reproduza, localize a camada, e só então corrija.
 
 ## 1. Reproduzir
 
-Rode `npm run dev` (abre o Chrome com a extensão e hot reload) e descreva o passo a
-passo exato que leva ao erro. Se não reproduzir, pergunte ao usuário o que falta.
+- Descreva o passo a passo exato, o alvo (extensão ou web), o viewport, o usuário e o
+  cenário do MSW ativo.
+- Faça o reset do MSW e tente de novo: estado persistido antigo é causa comum.
+- Se só acontece num alvo, o problema provavelmente está no bootstrap, na config ou no
+  history (agente `extension`).
 
-## 2. Olhar o console certo
+## 2. Localizar a camada
 
-- **Popup:** botão direito dentro do popup → *Inspecionar*. O DevTools da página
-  aberta na aba não mostra erros do popup.
-- **Background (service worker):** `chrome://extensions` → link *service worker* →
-  Inspecionar.
-- **Build/tipos:** a saída do terminal do `npm run dev`.
+| Onde olhar | O que procurar |
+|---|---|
+| Aba Network | O request saiu? Com os params e headers certos? A resposta segue o contrato? |
+| Console | Logs do MSW (`[MSW]`), erros de validação zod, erros do Router |
+| React Query Devtools | Query key correta? Dados velhos? Query de outro usuário no cache? |
+| TanStack Router Devtools | Search params validados? Rota casou? `beforeLoad` redirecionou? |
+| Socket | Conectou? Evento chegou? Foi descartado por `eventId`/`version`? |
 
-## 3. Causas comuns neste projeto
+Na extensão, o DevTools da app é o da própria aba `app.html`; o do background fica em
+`chrome://extensions` → *service worker*.
+
+## 3. Causas comuns
 
 | Sintoma | Verifique |
 |---|---|
-| Tela em branco / rota não abre | A URL tem `#/`? A rota está em `addChildren` no `src/router.tsx`? |
-| Estilo Tailwind não aplica | `main.tsx` importa `@/styles/globals.css`? Plugin `@tailwindcss/vite` no `wxt.config.ts`? |
-| Tabela em loop / travando | `data` ou `columns` recriados a cada render (ver skill `create-table`) |
-| Erro de tipo após mudar config ou entrypoint | Rode `npx wxt prepare` para regenerar `.wxt/` |
-| Mudança não aparece | Recarregue a extensão em `chrome://extensions` (manifest não tem hot reload) |
-| `browser.x` undefined | Falta permissão no manifest (`wxt.config.ts`) |
+| Request não interceptado | MSW iniciou antes do render? Handler registrado? Na extensão, ver `ARCHITECTURE.md` §10 |
+| Dado de outro usuário aparece | Query key sem `['user', userId]`; cache não limpo no logout; socket não desconectado |
+| Lista "pisca" ou volta resultado antigo | Search params fora da query key; `signal` não repassado ao Axios |
+| Valor monetário errado | Conta feita com `number` em vez de `lib/money` |
+| Pedido duplicado | Nova `Idempotency-Key` gerada no retry |
+| Evento ignorado | `version` não incrementada no mock; `eventId` repetido |
+| 404 ao recarregar na web | Falta fallback SPA no host |
+| Rota em branco na extensão | History errado no bootstrap (precisa de hash) |
+| Erro de tipo após mudar config/rotas | Regenerar `routeTree.gen.ts` (rodar o dev) e `npx wxt prepare` |
 
 ## 4. Corrigir e travar
 
 1. Faça a menor correção que resolve a causa, não o sintoma.
-2. Adicione um teste que falharia sem a correção (skill `test`).
-3. Rode `npm run compile` e `npm test -- --run` e informe o resultado.
+2. Adicione um teste que falharia sem a correção (unitário ou E2E com o cenário do MSW).
+3. Rode tipos, testes e o build do alvo afetado, e informe o resultado.

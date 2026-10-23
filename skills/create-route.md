@@ -1,52 +1,67 @@
 ---
 name: create-route
-description: Cria uma nova tela/rota no popup da extensão usando TanStack Router code-based com hash history. Use sempre que o usuário pedir uma nova página, tela, rota ou navegação entre telas, quiser adicionar search params tipados (filtro, página, ordenação), ou digitar /create-route.
+description: Cria uma nova tela/rota do CN Toon Vault com TanStack Router file-based — search params validados, rotas privadas sob _authenticated, loaders com TanStack Query e tratamento de não encontrado. Use sempre que o usuário pedir uma nova página, tela, rota, filtro na URL, proteção de rota ou navegação entre telas, ou digitar /create-route.
 ---
 
-# Criar rota (TanStack Router, code-based)
+# Criar rota (TanStack Router, file-based)
 
-O projeto declara as rotas em código (`src/router.tsx`), sem o plugin de geração de
-rotas, e usa **hash history**: o popup é servido em `chrome-extension://<id>/popup.html`,
-não há servidor para resolver paths, então sem hash a tela quebraria ao recarregar.
-Tudo abaixo existe para preservar essas duas decisões (ver `docs/decisions.md`).
+As rotas ficam em `src/routes/` e o plugin `@tanstack/router-plugin/vite` gera
+`src/routeTree.gen.ts` (não edite esse arquivo). A mesma árvore roda na extensão (hash
+history) e na web (browser history), então **nunca** monte URLs à mão nem dependa de
+`window.location` — use sempre as APIs do router, que funcionam nos dois.
 
-## 1. Criar o arquivo da rota
+## 1. Escolher o arquivo
 
-Uma tela por arquivo em `src/routes/<nome>.tsx`:
+| Tipo | Arquivo |
+|---|---|
+| Pública | `src/routes/cart.tsx` → `/cart` |
+| Com parâmetro | `src/routes/nfts.$nftId.tsx` → `/nfts/:nftId` |
+| Privada | `src/routes/_authenticated/profile.tsx` → `/profile` (o layout `_authenticated.tsx` faz o guard) |
+
+O mapa de rotas oficial está em `ARCHITECTURE.md` §3; atualize-o se criar rota nova.
+
+## 2. Declarar a rota
 
 ```tsx
-import { createRoute } from '@tanstack/react-router';
-import { rootRoute } from './__root';
+import { createFileRoute } from '@tanstack/react-router';
 
-export const <nome>Route = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/<nome>',
-  component: <Nome>Page,
+export const Route = createFileRoute('/nfts/$nftId')({
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(nftQueries.detail(params.nftId)),
+  pendingComponent: NftDetailSkeleton,
+  errorComponent: NftDetailError,
+  notFoundComponent: NftNotFound,
+  component: NftDetailPage,
 });
-
-function <Nome>Page() {
-  // orquestra dados (lib/) e componentes (components/); sem lógica pesada aqui
-}
 ```
 
-## 2. Registrar na árvore
+- Dados vêm das `queryOptions` da feature; a página usa `useSuspenseQuery`/`useQuery`
+  com as mesmas options, para o cache ser compartilhado.
+- `pendingComponent` é um skeleton com as dimensões finais (evita CLS).
 
-Adicione a rota em `rootRoute.addChildren([...])` em `src/router.tsx`. Rota criada e
-não registrada é a causa mais comum de "tela em branco".
+## 3. Search params (estado da URL)
 
-## 3. Search params (se o requisito pedir)
+Busca, filtros, ordenação e paginação moram na URL para sobreviver a refresh e ao
+histórico (spec, Catálogo e detalhe):
 
-Estado que faz sentido na URL — filtro, página, ordenação — vai em search params
-com `validateSearch`, para ficar tipado e sobreviver ao fechar/abrir o popup no
-mesmo hash. Não use search params para estado puramente visual (ex.: hover).
+- Declare com `validateSearch` usando um schema zod com valores padrão.
+- Ao mudar filtro, navegue com `page: 1`.
+- Inclua os search params na query key (via `loaderDeps`) para isolar o cache por consulta.
 
-## 4. Navegar
+## 4. Rotas privadas
 
-Use `<Link to="/<nome>">` ou `useNavigate()`. Nunca `<a href="/...">`: ignora o hash
-history e o tipo das rotas.
+Coloque a rota sob `_authenticated/`. O `beforeLoad` do layout verifica a sessão e
+redireciona para `/login` com `search: { redirect: location.href }`. Após o login,
+navegue de volta para `redirect`.
 
-## 5. Testar
+## 5. Navegar
 
-Renderize o router com `createMemoryHistory({ initialEntries: ['/<nome>'] })` e
-verifique o que o usuário vê (`getByRole`, `getByText`). Para navegação, clique no
-link com `userEvent` e confira a tela de destino.
+Use `<Link to="/nfts/$nftId" params={{ nftId }}>` ou `useNavigate()`. Nunca `<a href>`
+para rotas internas.
+
+## 6. Testar
+
+- Acesso direto à URL (inclusive com search params) e refresh.
+- Voltar/avançar no histórico restaura o estado.
+- Rota inexistente e recurso inexistente mostram a tela de não encontrado.
+- Cubra no E2E (skill `e2e-test`).

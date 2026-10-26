@@ -15,6 +15,11 @@ Formato: **Decisão** — motivo. Registre aqui toda escolha não óbvia. A stac
 11. **Playwright e Lighthouse rodam no build web** — é o artefato publicado e o único auditável pelo Lighthouse de forma reproduzível.
 12. **Vitest para unitários** — complementar à stack obrigatória; cobre lógica pura (dinheiro, dedupe de eventos) mais rápido que E2E.
 13. **TanStack Table removido** — o spec não tem telas tabulares (catálogo é grade de cards, carrinho é lista). Reavaliar se surgir histórico de pedidos em tabela.
+14. **MSW fixado em 2.x** — `@mswjs/socket.io-binding@0.2.0` (exigido pelo spec, §6) declara peer `msw@^2.10.2` e não há versão para o MSW 3. Atualizar só quando o binding suportar.
+15. **`.npmrc` com `legacy-peer-deps=true`** — `@hookform/resolvers@6` declara peers opcionais conflitantes (`effect` v3 via `@typeschema` vs. v4) que o projeto não usa; sem a flag, `npm install` falha com ERESOLVE. Efeito colateral: conflitos reais de peer deixam de travar o install — conferir com `npm install --dry-run --legacy-peer-deps=false` ao adicionar dependências.
+16. **Vulnerabilidades do `@lhci/cli` aceitas** — as 16 do `npm audit` vêm todas dele (puppeteer, tmp, extract-zip…); `npm audit --omit=dev` = 0. É ferramenta local de auditoria, sem input não confiável, e a única "correção" oferecida é um downgrade para 0.1.0.
+17. **`cn()` do pacote `cn`** — o shadcn CLI 4 usa o pacote oficial `cn` no lugar de `clsx` + `tailwind-merge`; os componentes gerados importam dele diretamente.
+18. **ID de NFT é um slug** (`enchiridion`, `espada-de-sangue-de-demonio`) — URLs legíveis para deep link e SEO, e fixtures determinísticas para E2E e Lighthouse.
 
 ## Em aberto
 

@@ -60,7 +60,7 @@ Não há back-end: **o MSW é a API em todos os ambientes**, inclusive no deploy
     │   ├── http/                    # instância Axios, interceptors, normalização de erros
     │   ├── realtime/                # cliente socket, dedupe/versão de eventos
     │   ├── money/                   # aritmética decimal (strings) e formatação TC/ETH
-    │   └── utils.ts                 # cn() do shadcn e helpers
+    │   └── utils.ts                 # reexporta cn() do pacote `cn` (shadcn)
     ├── components/
     │   ├── ui/                      # gerado pelo shadcn (adaptado ao tema CN)
     │   └── …                        # layout, skeletons, feedback compartilhados

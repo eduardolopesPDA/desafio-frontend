@@ -6,7 +6,8 @@ import path from 'node:path'
 
 export default defineConfig({
   srcDir: 'src',
-  manifest: { name: 'CN Toon Vault' },
+  // `action` é necessário para o clique no ícone chegar ao background.
+  manifest: { name: 'CN Toon Vault', action: {} },
   vite: () => ({
     plugins: [tanstackRouter({ target: 'react' }), react(), tailwindcss()],
     resolve: { alias: { '@': path.resolve(__dirname, 'src') } },

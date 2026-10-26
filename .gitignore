@@ -1,0 +1,11 @@
+node_modules
+dist
+.output
+.wxt
+.env
+.env.local
+playwright-report
+test-results
+.lighthouseci
+src/routeTree.gen.ts
+*.log

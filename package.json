@@ -1,0 +1,53 @@
+{
+  "name": "cn-toon-vault",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "postinstall": "wxt prepare",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "dev:ext": "wxt",
+    "build:ext": "wxt build",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "lighthouse": "lhci autorun --config=lighthouse/lighthouserc.desktop.json && lhci autorun --config=lighthouse/lighthouserc.mobile.json"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@mswjs/socket.io-binding": "^0.2.0",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query-devtools": "^5.105.0",
+    "@tanstack/router-devtools": "^1.167.2",
+    "@tanstack/router-plugin": "^1.168.48",
+    "@types/big.js": "^7.0.0",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "msw": "^3.0.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5",
+    "wxt": "^0.21.5"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^6.0.0",
+    "@tanstack/react-query": "^5.105.0",
+    "@tanstack/react-router": "^1.170.46",
+    "axios": "^1.20.0",
+    "big.js": "^7.0.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.61.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-hook-form": "^7.91.0",
+    "socket.io-client": "^4.8.4",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.7"
+  }
+}

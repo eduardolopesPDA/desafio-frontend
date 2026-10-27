@@ -20,6 +20,8 @@ Formato: **Decisão** — motivo. Registre aqui toda escolha não óbvia. A stac
 16. **Vulnerabilidades do `@lhci/cli` aceitas** — as 16 do `npm audit` vêm todas dele (puppeteer, tmp, extract-zip…); `npm audit --omit=dev` = 0. É ferramenta local de auditoria, sem input não confiável, e a única "correção" oferecida é um downgrade para 0.1.0.
 17. **`cn()` do pacote `cn`** — o shadcn CLI 4 usa o pacote oficial `cn` no lugar de `clsx` + `tailwind-merge`; os componentes gerados importam dele diretamente.
 18. **ID de NFT é um slug** (`enchiridion`, `espada-de-sangue-de-demonio`) — URLs legíveis para deep link e SEO, e fixtures determinísticas para E2E e Lighthouse.
+19. **TypeScript 6.0, não 7** — o `typescript-eslint` (até a canary) exige `typescript <6.1`; o TS 7 é a reescrita em Go e ainda não expõe a API que ele usa. Subir quando houver suporte.
+20. **ESLint com as regras de dependência** — as regras do `ARCHITECTURE.md §2` viram `no-restricted-imports` por pasta em `eslint.config.js`, sem plugin extra. Rodam no hook `pre-commit` (`.githooks/`, ativado por `core.hooksPath` no `prepare`), sem husky/lint-staged: o hook lê o conteúdo do índice (`git show :arquivo`) e passa para `ESLint#lintText`, então valida exatamente o que vai para o commit.
 
 ## Em aberto
 

@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+// Roda o ESLint no conteúdo staged (o que vai para o commit, não o que está no disco).
+// Ativado por `npm install` (script `prepare`).
+import { execFileSync } from 'node:child_process'
+import { ESLint } from 'eslint'
+
+const LINTABLE = /\.(ts|tsx|js|mjs|cjs)$/
+
+const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+
+const staged = git('diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z')
+  .split('\0')
+  .filter((file) => LINTABLE.test(file))
+
+if (staged.length === 0) process.exit(0)
+
+const eslint = new ESLint()
+const results = []
+for (const file of staged) {
+  if (await eslint.isPathIgnored(file)) continue
+  results.push(...(await eslint.lintText(git('show', `:${file}`), { filePath: file })))
+}
+
+const problems = results.reduce((sum, r) => sum + r.errorCount + r.warningCount, 0)
+if (problems > 0) {
+  const formatter = await eslint.loadFormatter('stylish')
+  console.error(await formatter.format(results))
+  console.error('✖ ESLint encontrou problemas no que está staged. Corrija, rode `git add` e tente de novo.\n')
+  process.exit(1)
+}

@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+// Valida a mensagem de commit no estilo do repo: verbo no presente, em português, sem prefixo.
+// Ex.: "Adiciona cupom promocional ao carrinho". Ativado por `npm install` (script `prepare`).
+import { readFileSync } from 'node:fs'
+
+const MAX_SUBJECT = 72
+const AUTO_MESSAGE = /^(Merge |Revert "|fixup! |squash! |amend! )/
+const PREFIX = /^[a-z]+(\([^)]*\))?!?:/i
+// 3ª pessoa do presente que termina como infinitivo.
+const PRESENT_ENDING_LIKE_INFINITIVE = new Set(['quer', 'requer'])
+
+// O hook recebe a mensagem antes da limpeza do git: descarta o que o git também descarta
+// (diff abaixo da tesoura do `commit -v`, comentários e linhas em branco iniciais).
+const SCISSORS = '# ------------------------ >8 ------------------------'
+
+const raw = readFileSync(process.argv[2], 'utf8').split(/\r?\n/)
+const scissors = raw.indexOf(SCISSORS)
+const lines = (scissors === -1 ? raw : raw.slice(0, scissors)).filter((line) => !line.startsWith('#'))
+while (lines.length > 0 && lines[0].trim() === '') lines.shift()
+const subject = lines[0]?.trim() ?? ''
+
+if (AUTO_MESSAGE.test(subject)) process.exit(0)
+
+const verb = subject.split(/\s+/)[0]?.toLowerCase() ?? ''
+const errors = []
+
+if (!subject) errors.push('a mensagem está vazia')
+else {
+  if (PREFIX.test(subject)) errors.push('não use prefixo (feat:, fix:, chore(...): …)')
+  if (!/^\p{Lu}/u.test(subject)) errors.push('comece com letra maiúscula')
+  if (/ndo$/.test(verb)) errors.push(`"${verb}" está no gerúndio; use o presente ("Cria", não "Criando")`)
+  else if (/[aei]r$/.test(verb) && !PRESENT_ENDING_LIKE_INFINITIVE.has(verb))
+    errors.push(`"${verb}" está no infinitivo; use o presente ("Adiciona", não "Adicionar")`)
+  else if (/(ou|ei|eu|iu)$/.test(verb)) errors.push(`"${verb}" está no passado; use o presente ("Corrige", não "Corrigiu")`)
+  if (subject.length > MAX_SUBJECT) errors.push(`a primeira linha tem ${subject.length} caracteres (máx. ${MAX_SUBJECT})`)
+  if (subject.endsWith('.')) errors.push('não termine a primeira linha com ponto')
+}
+if (lines.length > 1 && lines[1].trim() !== '') errors.push('deixe uma linha em branco entre o título e o corpo')
+
+if (errors.length) {
+  console.error(`\n✖ Mensagem de commit fora do padrão:\n  "${subject}"\n`)
+  for (const error of errors) console.error(`  - ${error}`)
+  console.error('\n  Padrão: verbo no presente, em português, sem prefixo.')
+  console.error('  Ex.: "Adiciona cupom promocional ao carrinho"\n')
+  process.exit(1)
+}

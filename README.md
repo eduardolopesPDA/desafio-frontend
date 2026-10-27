@@ -27,6 +27,13 @@ npm install
 | `npm run test:e2e` | Testes E2E e regressão visual (Playwright) |
 | `npm run lighthouse` | Auditoria Lighthouse (mobile e desktop) |
 
+## Hooks de commit
+
+O `npm install` ativa os hooks de `.githooks/` (script `prepare`, que roda `git config core.hooksPath .githooks`):
+
+- **`pre-commit`** roda o ESLint no conteúdo staged (o que vai para o commit, não o que está no disco), incluindo as regras de dependência entre camadas do `ARCHITECTURE.md`. Para checar o projeto inteiro: `npm run lint`.
+- **`commit-msg`** valida a mensagem: verbo no presente, em português, sem prefixo, até 72 caracteres e sem ponto final, como em `Adiciona cupom promocional ao carrinho`.
+
 ## Variáveis de ambiente
 
 | Variável | Padrão | Descrição |

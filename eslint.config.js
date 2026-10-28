@@ -32,6 +32,8 @@ export default defineConfig([
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: { globals: globals.browser },
+    // Permite tirar campos com `const { interno, ...resto } = obj`.
+    rules: { '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }] },
   },
   {
     files: ['src/**/*.{ts,tsx}'],

@@ -38,27 +38,66 @@ O `npm install` ativa os hooks de `.githooks/` (script `prepare`, que roda `git 
 
 ## Variáveis de ambiente
 
-| Variável | Padrão | Descrição |
-|---|---|---|
 Copie `.env.example` para `.env` para sobrescrever. Todas são opcionais.
 
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `VITE_API_URL` | `/api` | Base URL da API REST (interceptada pelo MSW) |
-| `VITE_MSW_SCENARIO` | `default` | Cenário inicial do MSW (_a implementar na Fase 1_) |
-| `VITE_SOCKET_URL` | _a definir_ | URL do Socket.IO (interceptada pelo MSW) |
+| `VITE_MSW_SCENARIO` | `default` | Cenário inicial do MSW quando nenhum foi escolhido no navegador |
+
+O Socket.IO conecta na mesma origem da app (`/socket.io/`), também interceptado pelo MSW.
 
 ## Credenciais fictícias
 
-| Colecionador | E-mail | Senha |
-|---|---|---|
-| Finn | `finchin@ooo.com` | _a definir_ |
-| Gumball | `gumball@elmore.com` | _a definir_ |
+| Colecionador | E-mail | Senha | Para testar |
+|---|---|---|---|
+| Finn Mertens | `finchin@ooo.com` | `Finn1234` | Carteiras principal e secundária, Enchiridion nas Toon Stars |
+| Gumball Watterson | `gumball@elmore.com` | `Gumball1234` | Só a carteira principal (cadastre a secundária) |
+
+Cupons: `BUBBLEGUM10` (10%), `RIGBYFAIL` (100 TC / 0,0333 ETH) e `CUPOM_REINO_DOCE_EXPIRADO` (expirado). Qualquer outro código é inválido.
+
+As senhas existem no mock só como hash SHA-256 com salt (`src/mocks/fixtures/index.ts`).
 
 ## Cenários do MSW
 
-_Como selecionar (`?scenario=`), listar e resetar os cenários._
+Não há back-end: o MSW é a API em todos os ambientes, inclusive no deploy. O estado (catálogo, carrinhos, pedidos, contas) fica no `localStorage` e sobrevive a refresh.
+
+- **Escolher um cenário:** abra qualquer URL com `?scenario=<nome>`, por exemplo `/?scenario=slow-network`. A escolha fica salva até outra; volte com `?scenario=default`.
+- **Resetar o universo:** `?reset` restaura fixtures, apaga sessões, carrinhos e pedidos. Combina com o cenário: `/?reset&scenario=tx-rejected`.
+- **Pelo console** (`window.__cnMock`): `scenarios()` lista os cenários, `scenario` mostra o ativo, `setScenario(nome)`, `reset()`, `expireSessions()`, `updateNft(id, { price, editions })` (emite `nft.updated`) e `disconnectSockets(ms)`.
+- **No Playwright:** navegue com os mesmos parâmetros e espere `window.__cnMock` existir antes de interagir.
+
+| Cenário | O que acontece |
+|---|---|
+| `default` | Sucesso, latência fixa de 250 ms |
+| `slow-network` | Toda resposta leva 2,5 s (skeletons) |
+| `variable-latency` | Latência entre 100 ms e 2 s, mesma sequência a cada carregamento |
+| `out-of-order` | Listagem do catálogo: chamadas ímpares levam 2 s, pares 300 ms |
+| `catalog-error` | Listagem responde 503 nas 3 primeiras chamadas e depois se recupera |
+| `server-error` | Toda requisição responde 500 |
+| `offline` | Toda requisição falha na rede |
+| `favorite-error` | Favoritar e desfavoritar respondem 503 |
+| `blockchain-down` | Criar pedido e conectar carteira respondem 503 |
+| `price-changed` | 1,5 s após a cotação, o preço do 1º item do carrinho sobe 10% (`nft.updated`) |
+| `sold-out` | 1,5 s após a cotação, a edição do 1º item do carrinho esgota (`nft.updated`) |
+| `order-timeout` | O 1º pedido é criado, mas a resposta leva 15 s (o cliente desiste em 10 s) |
+| `tx-rejected` | Transações são recusadas na rede |
+| `wallet-rejected` | A carteira recusa a conexão |
+| `wallet-disconnected` | A carteira desconecta na 1ª tentativa de assinar |
+| `duplicate-events` | Eventos de socket chegam duplicados e seguidos de uma versão antiga |
+
+Os gatilhos "1º" valem uma vez por carregamento de página.
 
 ## Reproduzindo os fluxos de falha
 
-_Passo a passo de cada cenário de falha do spec §6._
+Regras que não precisam de cenário, porque vêm dos dados:
+
+- **Busca vazia:** pesquise `Scooby-Doo`.
+- **NFT inexistente e queimado:** `/nfts/nao-existe` (404) e `/nfts/gema-do-lich` (410).
+- **Edição indisponível e esgotado:** Edição Holográfica da `coroa-do-rei-gelado`; `moletom-do-rigby` sem tiragem.
+- **Conflito de cadastro:** cadastre-se com `finchin@ooo.com`.
+- **Cupom inválido ou expirado:** `QUALQUERCOISA` e `CUPOM_REINO_DOCE_EXPIRADO`.
+- **Sessão expirada:** logado, rode `__cnMock.expireSessions()` no console e navegue.
+- **Acesso não autorizado:** abra uma rota privada sem login, ou o pedido de outro colecionador (403).
+
+_O passo a passo pela interface de cada cenário entra junto com as telas (Fases 2 a 6)._

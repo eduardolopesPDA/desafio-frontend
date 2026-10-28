@@ -65,11 +65,14 @@ Não há back-end: **o MSW é a API em todos os ambientes**, inclusive no deploy
     │   ├── ui/                      # gerado pelo shadcn (adaptado ao tema CN)
     │   └── …                        # layout, skeletons, feedback compartilhados
     ├── mocks/
-    │   ├── browser.ts               # setupWorker + socket binding
-    │   ├── handlers/                # um arquivo por recurso REST
-    │   ├── realtime.ts              # emissão de nft.updated / order.updated
-    │   ├── db/                      # estado em memória, persistência local e reset
-    │   ├── fixtures/                # 12–20 NFTs, ≥ 2 usuários, cupons, carteiras
+    │   ├── browser.ts               # startMocks(): controles da URL, setupWorker, pedidos pendentes
+    │   ├── handlers/                # um arquivo por recurso REST + index com todos
+    │   ├── realtime.ts              # Socket.IO simulado: conexões, nft.updated / order.updated
+    │   ├── http.ts · session.ts     # route() com cenário e erros do contrato · sessão e hash de senha
+    │   ├── catalog.ts · carts.ts    # regras compartilhadas: NFTs, tiragem, carrinho, cotação
+    │   ├── devtools.ts              # ?scenario, ?reset e window.__cnMock
+    │   ├── db/                      # estado persistido em localStorage, reset e dinheiro (big.js)
+    │   ├── fixtures/                # 16 NFTs, 2 usuários, cupons, carteiras, gas fee
     │   └── scenarios/               # latência, falhas, timeouts, conflitos
     └── styles/globals.css           # Tailwind v4 + tokens do tema
 ```
@@ -120,7 +123,20 @@ File-based, em `src/routes/`, com o plugin `@tanstack/router-plugin/vite` nos do
 - O cliente guarda a última `version` por recurso: ignora versões antigas/iguais e `eventId` repetido.
 - Na reconexão, invalida as queries ativas (carrinho, cotação, pedido pendente) para reconciliar com a REST.
 - Listeners são registrados em hooks com cleanup; nada sobrevive ao ciclo de vida do componente ou da sessão.
-- **Transporte nos mocks:** `@mswjs/socket.io-binding` sobre a interceptação de WebSocket do MSW. Limitações (sem servidor real, eventos disparados pelo `mocks/db` e pelos cenários) documentadas aqui ao final da implementação.
+
+### Transporte nos mocks
+
+O `socket.io-client` conecta na mesma origem (`/socket.io/`, transporte `websocket`). O MSW substitui o `WebSocket` global e o `ws.link` de `mocks/realtime.ts` atende a conexão; o `@mswjs/socket.io-binding` traduz o protocolo Engine.IO/Socket.IO. Os eventos nascem das mudanças no `mocks/db` (preço, tiragem, pedido), dos cenários e de `window.__cnMock`, nunca da UI.
+
+Limitações conhecidas:
+
+- **Só transporte `websocket`.** O MSW intercepta WebSocket, não o long-polling do Engine.IO. O cliente precisa de `transports: ['websocket']`.
+- **A app carrega depois do MSW.** O `engine.io-client` guarda o `WebSocket` global no import. Por isso o `bootstrap` faz `import()` do router só depois de `startMocks()`; um import estático da app ali quebraria a interceptação.
+- **Handshake simplificado.** O binding responde o `CONNECT` na hora, sem validar `auth`. O mock lê o token do pacote `40{...}` e só então associa a conexão ao colecionador; até isso, ela recebe apenas eventos públicos. Token inválido não recusa a conexão: ela fica como visitante.
+- **Heartbeat manual.** O binding não envia ping; o mock manda `2` a cada 20 s para o cliente não cair por `pingTimeout`.
+- **Sem rooms, namespaces nem acks.** O isolamento por usuário é feito filtrando as conexões no próprio mock.
+- **Por aba.** O "servidor" vive em cada aba; duas abas não trocam eventos entre si, mas compartilham o estado pelo `localStorage` ao recarregar.
+- **Queda simulada.** `__cnMock.disconnectSockets(ms)` fecha as conexões e recusa reconexões por `ms`, para testar reconexão e reconciliação.
 
 ## 6. Valores monetários
 
@@ -135,15 +151,20 @@ Preços, descontos, Gas Fee e totais trafegam como **strings decimais** e são c
 
 ## 8. Mocks (MSW)
 
-- Handlers por recurso em `mocks/handlers/`, sobre um `db` em memória persistido em `localStorage`. **Reset** restaura as fixtures.
-- Cenários de rede em `mocks/scenarios/` (lentidão, latência variável, fora de ordem, timeout, 4xx/5xx, blockchain indisponível, sessão expirada, cupom expirado, preço alterado, esgotado, transação recusada).
-- Seleção de cenário: `?scenario=<nome>` ou painel de dev; persistida em `localStorage`. Playwright define via `page.addInitScript`.
+- Handlers por recurso em `mocks/handlers/`, todos declarados com `route()` (`mocks/http.ts`). Ele aplica latência e falhas do cenário, converte `MockError` no corpo de erro do contrato e persiste o `db` após escritas.
+- Requests validados com os schemas de `contracts/`; erros de validação saem como `VALIDATION_ERROR` com `fields`.
+- Um único `db` (`mocks/db`) mantém catálogo, contas, sessões, favoritos, carrinhos, cotações, pedidos e carteiras consistentes, persistido em `localStorage`. **Reset** (`?reset`) restaura as fixtures. Conexões de carteira ficam só em memória.
+- Regras de negócio no mock: tiragem e limite por pedido, cupons, cotação revalidada no pedido, idempotência, reserva de tiragem enquanto o pedido está pendente, recibo como snapshot e isolamento por usuário.
+- Pedidos pendentes "mineram" por 4 s. O resultado e o horário são gravados na criação, então refresh no meio não perde nem duplica o pedido: `startMocks()` reagenda os pendentes e a leitura confirma os vencidos.
+- Cenários em `mocks/scenarios/`, determinísticos (latências fixas ou de PRNG com semente). A lista está no `README.md`.
+- Seleção: `?scenario=<nome>` (persistido em `localStorage`), `VITE_MSW_SCENARIO` como padrão, ou `window.__cnMock.setScenario()`.
 
 ## 9. Testes e qualidade
 
 | Ferramenta | Escopo | Alvo |
 |---|---|---|
-| Vitest | Unitários de `lib/` (money, dedupe de eventos), schemas e funções puras | — |
+| Vitest — `unit` | Unitários de `lib/` (money, http, dedupe de eventos), ao lado do código | — |
+| Vitest — `api` | Regras da API simulada (`tests/api/`): handlers no `msw/node`, chamados pelo Axios da app, respostas validadas pelos schemas | — |
 | Playwright | E2E dos 12 cenários do spec, Chromium, viewports desktop (1440) e mobile (390); regressão visual de catálogo, detalhe, carrinho e checkout | build web (`vite preview`) |
 | Lighthouse (LHCI) | Home e detalhe, perfis mobile e desktop, 3 execuções, mediana; reports HTML/JSON em `lighthouse/reports/` | build web |
 

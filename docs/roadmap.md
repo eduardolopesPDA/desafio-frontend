@@ -12,12 +12,12 @@ Cada fase termina com tipos, testes e build passando. Referências entre parênt
 - [ ] Deploy web com fallback SPA publicado
 
 ## Fase 1 — Contratos e mocks (§5, §6)
-- [ ] Schemas zod de todos os recursos, erros e eventos em `src/contracts/`
-- [ ] Fixtures: 12–20 NFTs de todos os shows listados, ≥ 2 usuários, cupons, carteiras
-- [ ] `mocks/db` com persistência local e reset
-- [ ] Handlers REST de todos os recursos
-- [ ] Cenários de rede/falha selecionáveis e reproduzíveis
-- [ ] Socket via `@mswjs/socket.io-binding` emitindo `nft.updated` e `order.updated`
+- [x] Schemas zod de todos os recursos, erros e eventos em `src/contracts/`
+- [ ] Fixtures: 12–20 NFTs de todos os shows listados, ≥ 2 usuários, cupons, carteiras — dados prontos (16 NFTs); faltam as imagens em `public/nfts/`
+- [x] `mocks/db` com persistência local e reset
+- [x] Handlers REST de todos os recursos
+- [x] Cenários de rede/falha selecionáveis e reproduzíveis
+- [x] Socket via `@mswjs/socket.io-binding` emitindo `nft.updated` e `order.updated`
 
 ## Fase 2 — Catálogo e detalhe (§3, Catálogo e detalhe)
 - [ ] Toon Vault: destaques, busca, filtros combináveis, ordenação, paginação no estado da URL

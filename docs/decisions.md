@@ -22,6 +22,14 @@ Formato: **Decisão** — motivo. Registre aqui toda escolha não óbvia. A stac
 18. **ID de NFT é um slug** (`enchiridion`, `espada-de-sangue-de-demonio`) — URLs legíveis para deep link e SEO, e fixtures determinísticas para E2E e Lighthouse.
 19. **TypeScript 6.0, não 7** — o `typescript-eslint` (até a canary) exige `typescript <6.1`; o TS 7 é a reescrita em Go e ainda não expõe a API que ele usa. Subir quando houver suporte.
 20. **ESLint com as regras de dependência** — as regras do `ARCHITECTURE.md §2` viram `no-restricted-imports` por pasta em `eslint.config.js`, sem plugin extra. Rodam no hook `pre-commit` (`.githooks/`, ativado por `core.hooksPath` no `prepare`), sem husky/lint-staged: o hook lê o conteúdo do índice (`git show :arquivo`) e passa para `ESLint#lintText`, então valida exatamente o que vai para o commit.
+21. **Erros normalizados em `ApiError` no interceptor do Axios** — features e TanStack Query tratam um tipo só (`code`, `status`, `fields`, `isTransient`), sem conhecer o Axios. Cancelamentos passam intactos para o Query reconhecê-los.
+22. **Cupom guardado no carrinho (`PUT/DELETE /cart/coupon`), não só enviado na cotação** — o spec pede carrinho que sobrevive a refresh e merge; o cupom faz parte desse estado. A cotação usa o cupom do carrinho.
+23. **Conexão de carteira pela API (`POST /wallets/:id/connect`)** — o spec pede simular conexão, recusa e desconexão. Pela API, os cenários `wallet-rejected` e `wallet-disconnected` agem na rede, sem caminho alternativo na UI. A conexão fica só em memória, como numa carteira real.
+24. **Preço no NFT, tiragem por edição** — o detalhe precisa de "edição indisponível" e limite de tiragem; preço por edição complicaria cotação e eventos sem ganho para o spec. `nft.updated` leva o total e a lista `editions`.
+25. **Bootstrap importa a app depois de `startMocks()`** — o `engine.io-client` captura o `WebSocket` global no import; carregar a app antes do MSW faria o socket escapar da interceptação.
+26. **Socket.IO na mesma origem, sem `VITE_SOCKET_URL`** — funciona igual na web e na extensão (`chrome-extension://`), e o `ws.link` casa qualquer host. Uma variável seria configuração sem uso.
+27. **Testes da API simulada no Node (`tests/api/`, `msw/node`)** — cobrem regras de negócio (idempotência, cotação, isolamento) em segundos, pelo cliente Axios real e validando respostas com os schemas. O E2E prova o MSW no navegador; não repete cada regra.
+28. **`ignoreRestSiblings` no ESLint** — tirar campos internos com `const { interno, ...publico }` é o jeito mais legível de montar respostas; sem a opção, o lint acusa a variável descartada.
 
 ## Em aberto
 

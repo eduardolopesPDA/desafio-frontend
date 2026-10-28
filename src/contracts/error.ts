@@ -4,6 +4,7 @@ import { z } from 'zod'
 export const apiErrorCodeSchema = z.enum([
   'VALIDATION_ERROR',
   'UNAUTHENTICATED',
+  'INVALID_CREDENTIALS',
   'SESSION_EXPIRED',
   'FORBIDDEN',
   'NFT_NOT_FOUND',
@@ -13,10 +14,13 @@ export const apiErrorCodeSchema = z.enum([
   'EDITION_LIMIT',
   'QUOTE_CHANGED',
   'IDEMPOTENCY_CONFLICT',
+  'WALLET_REJECTED',
+  'WALLET_DISCONNECTED',
   'NFT_BURNED',
   'COUPON_INVALID',
   'COUPON_EXPIRED',
   'NETWORK_UNAVAILABLE',
+  'INTERNAL_ERROR',
 ])
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>
 

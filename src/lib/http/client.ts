@@ -13,6 +13,8 @@ export function setAccessToken(token: string | null) {
 export const http = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api',
   timeout: REQUEST_TIMEOUT_MS,
+  // Listas repetem a chave (?rarity=raro&rarity=epico), como no contrato.
+  paramsSerializer: { indexes: null },
 })
 
 http.interceptors.request.use((config) => {

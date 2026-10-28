@@ -10,6 +10,6 @@ export default defineConfig({
   manifest: { name: 'CN Toon Vault', action: {} },
   vite: () => ({
     plugins: [tanstackRouter({ target: 'react' }), react(), tailwindcss()],
-    resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+    resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
   }),
 })

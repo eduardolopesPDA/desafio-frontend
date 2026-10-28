@@ -3,10 +3,10 @@
 Cada fase termina com tipos, testes e build passando. Referências entre parênteses apontam para seções de `docs/spec.md`.
 
 ## Fase 0 — Fundação
-- [ ] Scaffold WXT + React + TS com `srcDir: 'src'` e entrypoints `app/` e `background.ts`
-- [ ] Alvo web com Vite (`index.html`, `src/web/main.tsx`, `vite.config.ts`) e `bootstrap({ history })` compartilhado
+- [x] Scaffold WXT + React + TS com `srcDir: 'src'` e entrypoints `app/` e `background.ts`
+- [x] Alvo web com Vite (`index.html`, `src/web/main.tsx`, `vite.config.ts`) e `bootstrap({ history })` compartilhado
 - [ ] Tailwind v4 + shadcn/ui (`components.json`, tema CN em `globals.css`)
-- [ ] TanStack Router file-based nos dois alvos; TanStack Query; Axios em `lib/http`
+- [x] TanStack Router file-based nos dois alvos; TanStack Query; Axios em `lib/http`
 - [ ] MSW funcionando na web **e** na extensão (validar service worker vs. `msw/native`)
 - [ ] Vitest, Playwright (Chromium, 390 e 1440) e LHCI configurados com um teste/auditoria de fumaça
 - [ ] Deploy web com fallback SPA publicado

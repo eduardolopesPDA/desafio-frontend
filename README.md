@@ -13,19 +13,21 @@ Requisitos: Node.js 20+ e Google Chrome.
 
 ```bash
 npm install
+npx playwright install chromium   # navegador dos testes E2E
 ```
 
 ## Comandos
 
 | Comando | O que faz |
 |---|---|
-| `npm run dev` | Extensão em modo dev (WXT abre o Chrome com a extensão carregada) |
-| `npm run dev:web` | App web em modo dev |
-| `npm run build` / `npm run build:web` | Build da extensão (`.output/chrome-mv3`) / da web (`dist/`) |
-| `npm run zip` | Pacote `.zip` da extensão |
+| `npm run dev` | App web em modo dev |
+| `npm run build` / `npm run preview` | Build da web (`dist/`, com checagem de tipos) / serve o build |
+| `npm run dev:ext` | Extensão em modo dev (WXT abre o Chrome com a extensão carregada) |
+| `npm run build:ext` | Build da extensão (`.output/chrome-mv3`) |
 | `npm test` | Testes unitários (Vitest) |
-| `npm run test:e2e` | Testes E2E e regressão visual (Playwright) |
+| `npm run test:e2e` | Testes E2E e regressão visual (Playwright, sobre o build web) |
 | `npm run lighthouse` | Auditoria Lighthouse (mobile e desktop) |
+| `npm run lint` | ESLint, incluindo as regras de dependência entre camadas |
 
 ## Hooks de commit
 
@@ -38,7 +40,12 @@ O `npm install` ativa os hooks de `.githooks/` (script `prepare`, que roda `git 
 
 | Variável | Padrão | Descrição |
 |---|---|---|
+Copie `.env.example` para `.env` para sobrescrever. Todas são opcionais.
+
+| Variável | Padrão | Descrição |
+|---|---|---|
 | `VITE_API_URL` | `/api` | Base URL da API REST (interceptada pelo MSW) |
+| `VITE_MSW_SCENARIO` | `default` | Cenário inicial do MSW (_a implementar na Fase 1_) |
 | `VITE_SOCKET_URL` | _a definir_ | URL do Socket.IO (interceptada pelo MSW) |
 
 ## Credenciais fictícias

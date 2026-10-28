@@ -81,3 +81,18 @@ test('emite nft.updated pelo Socket.IO simulado', async ({ page }) => {
     expect.objectContaining({ nftId: 'enchiridion', version: 2, price: { tc: '9999.00', eth: '3.3333' }, available: 2 }),
   ])
 })
+
+test('serve todas as imagens citadas pelo catálogo', async ({ page }) => {
+  await open(page, '/?reset&scenario=default')
+  const { body } = await api(page, '/nfts?pageSize=48')
+  const details = await Promise.all(body.items.map((nft: { id: string }) => api(page, `/nfts/${nft.id}`)))
+  const sources: string[] = details.flatMap(({ body: nft }) => nft.gallery.map((image: { src: string }) => image.src))
+
+  // O preview responde index.html com 200 para arquivo inexistente: o tipo é o que prova.
+  const types = await page.evaluate(
+    (urls) => Promise.all(urls.map(async (url) => (await fetch(url)).headers.get('content-type'))),
+    sources,
+  )
+  expect(sources.length).toBeGreaterThanOrEqual(15)
+  expect(new Set(types)).toEqual(new Set(['image/webp']))
+})

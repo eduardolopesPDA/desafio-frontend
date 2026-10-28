@@ -13,7 +13,7 @@ Cada fase termina com tipos, testes e build passando. Referências entre parênt
 
 ## Fase 1 — Contratos e mocks (§5, §6)
 - [x] Schemas zod de todos os recursos, erros e eventos em `src/contracts/`
-- [ ] Fixtures: 12–20 NFTs de todos os shows listados, ≥ 2 usuários, cupons, carteiras — dados prontos (16 NFTs); faltam as imagens em `public/nfts/`
+- [x] Fixtures: 12–20 NFTs de todos os shows listados, ≥ 2 usuários, cupons, carteiras (imagens provisórias)
 - [x] `mocks/db` com persistência local e reset
 - [x] Handlers REST de todos os recursos
 - [x] Cenários de rede/falha selecionáveis e reproduzíveis
@@ -52,4 +52,5 @@ Cada fase termina com tipos, testes e build passando. Referências entre parênt
 - [ ] Responsividade em 390, 768 e 1440; `prefers-reduced-motion`
 - [ ] 12 cenários E2E do §9 + regressão visual com baselines versionadas
 - [ ] Lighthouse: home e detalhe, mobile e desktop, 3 execuções, mediana, LCP/CLS/TBT, reports
+- [ ] Trocar as imagens provisórias de `public/nfts/` e `public/avatars/` pelos assets do Figma e revisar os `alt` das fixtures
 - [ ] `README.md` e `ARCHITECTURE.md` completos; deploy final

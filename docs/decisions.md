@@ -30,6 +30,7 @@ Formato: **Decisão** — motivo. Registre aqui toda escolha não óbvia. A stac
 26. **Socket.IO na mesma origem, sem `VITE_SOCKET_URL`** — funciona igual na web e na extensão (`chrome-extension://`), e o `ws.link` casa qualquer host. Uma variável seria configuração sem uso.
 27. **Testes da API simulada no Node (`tests/api/`, `msw/node`)** — cobrem regras de negócio (idempotência, cotação, isolamento) em segundos, pelo cliente Axios real e validando respostas com os schemas. O E2E prova o MSW no navegador; não repete cada regra.
 28. **`ignoreRestSiblings` no ESLint** — tirar campos internos com `const { interno, ...publico }` é o jeito mais legível de montar respostas; sem a opção, o lint acusa a variável descartada.
+29. **Imagens provisórias em WebP** — `public/nfts/<id>-<n>.webp` (800×800) e `public/avatars/<id>.webp` (256×256) são cartões gerados (cores do show, raridade, iniciais e nome) até os assets do Figma chegarem. Já em WebP e nos caminhos finais, para a troca não mexer em fixtures nem telas. Os `alt` das fixtures descrevem a arte final e precisam ser revisados na troca.
 
 ## Em aberto
 

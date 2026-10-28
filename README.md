@@ -56,6 +56,8 @@ O Socket.IO conecta na mesma origem da app (`/socket.io/`), também interceptado
 
 Cupons: `BUBBLEGUM10` (10%), `RIGBYFAIL` (100 TC / 0,0333 ETH) e `CUPOM_REINO_DOCE_EXPIRADO` (expirado). Qualquer outro código é inválido.
 
+As imagens de NFTs e avatares em `public/` são **provisórias** (cartões gerados), até a troca pelos assets do Figma.
+
 As senhas existem no mock só como hash SHA-256 com salt (`src/mocks/fixtures/index.ts`).
 
 ## Cenários do MSW

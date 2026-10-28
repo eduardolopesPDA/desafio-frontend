@@ -23,6 +23,11 @@ export class ApiError extends Error {
   }
 }
 
+// Mensagem para o usuário: a da API quando houver; senão, uma genérica (ex.: resposta fora do contrato).
+export function errorMessage(error: unknown) {
+  return error instanceof ApiError ? error.message : 'Algo deu errado. Tente novamente.'
+}
+
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) return error
   if (!isAxiosError(error)) return new ApiError('UNKNOWN', 'Erro inesperado.', undefined, undefined, { cause: error })

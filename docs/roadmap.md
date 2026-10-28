@@ -5,7 +5,7 @@ Cada fase termina com tipos, testes e build passando. Referências entre parênt
 ## Fase 0 — Fundação
 - [x] Scaffold WXT + React + TS com `srcDir: 'src'` e entrypoints `app/` e `background.ts`
 - [x] Alvo web com Vite (`index.html`, `src/web/main.tsx`, `vite.config.ts`) e `bootstrap({ history })` compartilhado
-- [ ] Tailwind v4 + shadcn/ui (`components.json`, tema CN em `globals.css`)
+- [x] Tailwind v4 + shadcn/ui (`components.json`, tema CN em `globals.css`; provisório até o Figma)
 - [x] TanStack Router file-based nos dois alvos; TanStack Query; Axios em `lib/http`
 - [ ] MSW funcionando na web **e** na extensão (validar service worker vs. `msw/native`)
 - [ ] Vitest, Playwright (Chromium, 390 e 1440) e LHCI configurados com um teste/auditoria de fumaça
@@ -20,9 +20,9 @@ Cada fase termina com tipos, testes e build passando. Referências entre parênt
 - [x] Socket via `@mswjs/socket.io-binding` emitindo `nft.updated` e `order.updated`
 
 ## Fase 2 — Catálogo e detalhe (§3, Catálogo e detalhe)
-- [ ] Toon Vault: destaques, busca, filtros combináveis, ordenação, paginação no estado da URL
-- [ ] Estados de carregamento (skeleton shimmer), vazio, erro e atualização em background
-- [ ] Detalhe: galeria, lore, atributos, edições, quantidade, acesso direto, inexistente/queimado, limite de tiragem
+- [x] Toon Vault: destaques, busca, filtros combináveis, ordenação, paginação no estado da URL
+- [x] Estados de carregamento (skeleton shimmer), vazio, erro e atualização em background
+- [x] Detalhe: galeria, lore, atributos, edições, quantidade, acesso direto, inexistente/queimado, limite de tiragem
 
 ## Fase 3 — Toon Pass e favoritos (§3 Conta e sessão)
 - [ ] Cadastro (avatar, conflito), login com retorno ao fluxo, logout, sessão após refresh
@@ -52,5 +52,6 @@ Cada fase termina com tipos, testes e build passando. Referências entre parênt
 - [ ] Responsividade em 390, 768 e 1440; `prefers-reduced-motion`
 - [ ] 12 cenários E2E do §9 + regressão visual com baselines versionadas
 - [ ] Lighthouse: home e detalhe, mobile e desktop, 3 execuções, mediana, LCP/CLS/TBT, reports
+- [ ] Ajustar tema, tipografia e telas ao Figma
 - [ ] Trocar as imagens provisórias de `public/nfts/` e `public/avatars/` pelos assets do Figma e revisar os `alt` das fixtures
 - [ ] `README.md` e `ARCHITECTURE.md` completos; deploy final

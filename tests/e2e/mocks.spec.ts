@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { open } from './helpers'
 
 // Infraestrutura da API simulada no navegador: service worker, persistência, cenários e socket.
 // Os fluxos de tela ficam nos specs de cada feature.
@@ -15,12 +16,6 @@ function api(page: Page, path: string, init: { method?: string; body?: unknown; 
     },
     { path, init },
   )
-}
-
-// O MSW sobe antes da app; sem esperar, o fetch cai no servidor estático.
-async function open(page: Page, url: string) {
-  await page.goto(url)
-  await page.waitForFunction(() => window.__cnMock !== undefined)
 }
 
 async function loginAsFinn(page: Page) {

@@ -90,7 +90,7 @@ File-based, em `src/routes/`, com o plugin `@tanstack/router-plugin/vite` nos do
 
 | Rota | Tela | Acesso |
 |---|---|---|
-| `/` | Toon Vault — catálogo. Search params: `q`, `rarity[]`, `show[]`, `sort`, `page` | público |
+| `/` | Toon Vault — destaques e catálogo. Search params: `q`, `rarity`, `show`, `sort`, `page` | público |
 | `/nfts/$nftId` | Detalhe do Toon NFT | público |
 | `/cart` | Cofre / Carrinho | público (visitante) |
 | `/login` (`?redirect=`) · `/register` | Toon Pass | público |
@@ -100,7 +100,10 @@ File-based, em `src/routes/`, com o plugin `@tanstack/router-plugin/vite` nos do
 | `*` | Não encontrado (`notFoundComponent` na raiz) | — |
 
 - Rotas privadas ficam sob o layout `_authenticated` (`beforeLoad` verifica a sessão e redireciona para `/login?redirect=<rota atual>`).
-- Search params são validados com `validateSearch` (zod). Mudar filtro zera `page`.
+- Search params são validados com `validateSearch` (zod). Valor ausente ou inválido cai no padrão, e os padrões saem da URL (`stripSearchParams`). Mudar busca, filtro ou ordem zera `page`.
+- Listas repetem a chave na URL (`?rarity=raro&rarity=epico`), como na API: `parseSearch`/`stringifySearch` próprios em `app/router.ts`, no lugar do JSON padrão do router.
+- O catálogo não usa loader: a lista vem de `useQuery` com `keepPreviousData`, para filtrar sem trocar a página por skeleton e mostrar erro com nova tentativa no lugar. O detalhe usa loader (`ensureQueryData`): `NFT_NOT_FOUND` vira `notFound()`, e `NFT_BURNED` e falhas vão para o `errorComponent`.
+- Skeleton de rota só aparece depois de 400 ms de espera (`defaultPendingMs`), e fica pelo menos 300 ms na tela.
 
 ## 4. Estado remoto e política de cache (TanStack Query)
 

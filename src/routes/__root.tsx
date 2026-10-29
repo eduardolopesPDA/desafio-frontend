@@ -3,6 +3,8 @@ import type { QueryClient } from '@tanstack/react-query'
 import { NotFoundPanel } from '@/components/feedback'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { SiteHeader } from '@/components/layout/SiteHeader'
+import { AccountMenu } from '@/features/auth/components/AccountMenu'
+import { sessionQuery, useCurrentUser } from '@/features/auth/queries'
 
 // Foca o <main> sem mexer no hash: na extensão o hash é a rota.
 function SkipLink() {
@@ -21,11 +23,12 @@ function SkipLink() {
 }
 
 function RootLayout() {
+  const user = useCurrentUser()
   return (
     <>
       <HeadContent />
       <SkipLink />
-      <SiteHeader />
+      <SiteHeader account={<AccountMenu />} compactLogo={user !== null} />
       <main id="conteudo" tabIndex={-1} className="mx-auto max-w-7xl px-4 pt-8 outline-none sm:px-6">
         <Outlet />
       </main>
@@ -35,6 +38,11 @@ function RootLayout() {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  // A sessão entra no cache antes de qualquer tela: `useCurrentUser` nunca fica pendente. Só faz
+  // requisição na primeira navegação (e só com token salvo); falha de rede não derruba a app.
+  beforeLoad: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(sessionQuery())
+  },
   head: () => ({ meta: [{ title: 'CN Toon Vault' }] }),
   component: RootLayout,
   notFoundComponent: () => (

@@ -1,10 +1,11 @@
 import { createFileRoute, stripSearchParams } from '@tanstack/react-router'
 import { z } from 'zod'
-import { nftSortSchema, raritySchema, showIdSchema, type NftListParams } from '@/contracts'
+import { nftSortSchema, raritySchema, showIdSchema, type NftListParams, type NftSummary } from '@/contracts'
 import { CatalogFilters } from '@/features/catalog/components/CatalogFilters'
 import { CatalogResults } from '@/features/catalog/components/CatalogResults'
 import { CatalogToolbar } from '@/features/catalog/components/CatalogToolbar'
 import { FeaturedNfts } from '@/features/catalog/components/FeaturedNfts'
+import { ToonStarButton } from '@/features/favorites/components/ToonStarButton'
 
 // Um valor só chega como string; vários, como lista (ver parseSearch em app/router.ts).
 const listOf = <T extends z.ZodType>(item: T) =>
@@ -33,6 +34,9 @@ export const Route = createFileRoute('/')({
   component: CatalogPage,
 })
 
+// Toon Star no canto do cartão, oposto ao selo de raridade.
+const toonStar = (nft: NftSummary) => <ToonStarButton nftId={nft.id} nftName={nft.name} />
+
 function CatalogPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
@@ -59,7 +63,7 @@ function CatalogPage() {
         <h2 id="destaques" className="mt-10 mb-4 font-display text-2xl sm:text-3xl">
           Destaques da semana
         </h2>
-        <FeaturedNfts />
+        <FeaturedNfts cardAction={toonStar} />
       </section>
 
       <section aria-labelledby="catalogo" className="mt-16">
@@ -76,6 +80,7 @@ function CatalogPage() {
           <CatalogFilters rarity={search.rarity} show={search.show} onChange={update} />
           <CatalogResults
             params={params}
+            cardAction={toonStar}
             onClearFilters={() => navigate({ search: {}, resetScroll: false })}
             onPageChange={() => {
               const heading = document.getElementById('catalogo')

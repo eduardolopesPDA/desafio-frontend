@@ -2,6 +2,27 @@
 
 Cada fase termina com tipos, testes e build passando. Referências entre parênteses apontam para seções de `docs/spec.md`.
 
+## Retomar daqui (28/10/2026)
+
+Fases 1, 2 e 3 concluídas. **Próximo passo: Fase 4 — Carrinho, cotação e tempo real.**
+
+Ao começar a Fase 4:
+- Desconectar o socket em `endSession` (`features/auth/session.ts`, ponto marcado) e conectar com `auth: { token }` no login.
+- Merge do carrinho de visitante (`POST /cart/merge`) em `startSession`.
+- Dados privados novos usam `['user', userId, …]` e `enabled: user !== null`.
+
+Pontas soltas, fora das fases abaixo:
+- "Voltar ao catálogo" no detalhe perde os filtros que estavam aplicados.
+- Bundle principal com ~876 kB em um chunk só: dividir antes do Lighthouse (Fase 7).
+- O socket só foi testado no navegador com `WebSocket` cru e `nft.updated`; falta o `socket.io-client` real e o `order.updated` (Fases 4 e 5).
+- Toon Star fica desabilitada se `GET /favorites` falhar de vez (sem mensagem de erro própria).
+- Sugestões da revisão da Fase 3 ainda abertas: logout limpar a sessão antes da resposta do `POST /auth/logout` (evita o falso "sessão expirou" e a espera em rede lenta), `redirectIfAuthenticated` comum a login e cadastro, sincronizar logout entre abas (evento `storage`).
+- Fase 6: depois do `PATCH /profile`, atualizar o usuário da sessão no cache e no storage.
+
+Decisões pendentes do usuário:
+- Acesso ao Figma (conector) para ajustar o tema provisório e trocar as imagens.
+- Host do deploy: Vercel, Netlify ou Cloudflare Pages.
+
 ## Fase 0 — Fundação
 - [x] Scaffold WXT + React + TS com `srcDir: 'src'` e entrypoints `app/` e `background.ts`
 - [x] Alvo web com Vite (`index.html`, `src/web/main.tsx`, `vite.config.ts`) e `bootstrap({ history })` compartilhado
@@ -25,10 +46,10 @@ Cada fase termina com tipos, testes e build passando. Referências entre parênt
 - [x] Detalhe: galeria, lore, atributos, edições, quantidade, acesso direto, inexistente/queimado, limite de tiragem
 
 ## Fase 3 — Toon Pass e favoritos (§3 Conta e sessão)
-- [ ] Cadastro (avatar, conflito), login com retorno ao fluxo, logout, sessão após refresh
-- [ ] Expiração de sessão na navegação e no checkout preservando contexto
-- [ ] Rotas privadas; limpeza de cache e socket no logout/troca de usuário
-- [ ] Toon Stars com atualização otimista e rollback
+- [x] Cadastro (avatar, conflito), login com retorno ao fluxo, logout, sessão após refresh
+- [x] Expiração de sessão na navegação preservando contexto (no checkout: Fase 5)
+- [x] Rotas privadas; limpeza do cache privado no logout/troca de usuário (socket: Fase 4)
+- [x] Toon Stars com atualização otimista e rollback
 
 ## Fase 4 — Carrinho, cotação e tempo real (§3 Carrinho, §7)
 - [ ] Adicionar/alterar/remover respeitando tiragem; persistência e merge visitante → usuário

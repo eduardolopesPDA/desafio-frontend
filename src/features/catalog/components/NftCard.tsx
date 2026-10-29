@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { SHOW_NAMES, type NftSummary } from '@/contracts'
 import { Price } from '@/components/Price'
@@ -6,14 +7,25 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 const CARD = 'flex h-full flex-col overflow-hidden rounded-2xl border-[3px] border-ink bg-card shadow-toon'
 
+// Ação do cartão (a Toon Star), passada por quem monta a tela: o catálogo não depende de favoritos.
+export type NftCardAction = (nft: NftSummary) => ReactNode
+
+// O link fica no título e o `::after` dele cobre o cartão inteiro, então o clique vale em qualquer
+// ponto; a ação fica acima do link (z-10), porque botão dentro de link é HTML inválido.
 // `priority`: imagem acima da dobra (LCP), carregada já e com prioridade alta.
-export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?: boolean }) {
+export function NftCard({
+  nft,
+  priority = false,
+  action,
+}: {
+  nft: NftSummary
+  priority?: boolean
+  action?: NftCardAction
+}) {
   const soldOut = nft.available === 0
   return (
-    <Link
-      to="/nfts/$nftId"
-      params={{ nftId: nft.id }}
-      className={`${CARD} transition-[translate,box-shadow] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-toon-lg`}
+    <div
+      className={`${CARD} relative transition-[translate,box-shadow] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-toon-lg has-[a:focus-visible]:outline-3 has-[a:focus-visible]:outline-offset-3 has-[a:focus-visible]:outline-ring`}
     >
       <div className="relative aspect-square border-b-[3px] border-ink bg-muted">
         <img
@@ -29,7 +41,15 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
         <RarityBadge rarity={nft.rarity} className="absolute top-2.5 left-2.5" />
       </div>
       <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <h3 className="text-lg leading-snug font-bold">{nft.name}</h3>
+        <h3 className="text-lg leading-snug font-bold">
+          <Link
+            to="/nfts/$nftId"
+            params={{ nftId: nft.id }}
+            className="outline-none after:absolute after:inset-0 after:content-['']"
+          >
+            {nft.name}
+          </Link>
+        </h3>
         <p className="text-sm text-muted-foreground">{SHOW_NAMES[nft.show]}</p>
         <div className="mt-auto pt-3">
           <Price price={nft.price} />
@@ -38,7 +58,8 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
           </p>
         </div>
       </div>
-    </Link>
+      {action && <div className="absolute top-2.5 right-2.5 z-10">{action(nft)}</div>}
+    </div>
   )
 }
 

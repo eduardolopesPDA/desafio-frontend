@@ -115,9 +115,10 @@ File-based, em `src/routes/`, com o plugin `@tanstack/router-plugin/vite` nos do
 | Cancelamento | `signal` do Query repassado ao Axios; respostas fora de ordem são descartadas porque cada combinação de parâmetros tem sua própria key. |
 | Retries | Queries: até 2, com backoff, só para erro de rede/5xx. 4xx nunca. Mutations: sem retry automático. |
 | Pedido | `POST /orders` reenviado com a **mesma** `Idempotency-Key` após timeout; a key nasce no início do checkout e é guardada até a confirmação. |
-| Otimismo | Favoritar (Toon Star): `onMutate` atualiza o cache, `onError` faz rollback, `onSettled` invalida. |
+| Otimismo | Favoritar (Toon Star): `onMutate` atualiza o cache, `onError` faz rollback, `onSettled` invalida. Os toggles são enfileirados (`scope`), na ordem dos cliques; o rollback volta ao último estado aceito pelo servidor (não ao snapshot, que pode ser otimismo de um clique que também falhou) e só o último toggle pendente do NFT o aplica; a invalidação espera o último toggle terminar. |
 | Invalidação | Após mutation, invalida as keys do recurso afetado; eventos de socket atualizam via `setQueryData` e invalidam a cotação. |
-| Logout / troca de usuário | `queryClient.removeQueries({ queryKey: ['user'] })`, desconecta o socket e limpa a sessão. |
+| Sessão | `['auth', 'session']` (fora de `['user']`), `staleTime`/`gcTime` infinitos e sem retry: só muda por login, cadastro, logout ou 401. O `beforeLoad` da raiz faz `ensureQueryData`, então `useCurrentUser()` é síncrono. |
+| Logout / troca de usuário | `queryClient.removeQueries({ queryKey: ['user'] })` e limpa a sessão (login e cadastro também removem `['user']`, para a troca de usuário sem logout). A partir da Fase 4, desconecta o socket. |
 
 ## 5. Tempo real (Socket.IO)
 
@@ -147,9 +148,20 @@ Preços, descontos, Gas Fee e totais trafegam como **strings decimais** e são c
 
 ## 7. Sessão (Toon Pass)
 
-- Token salvo em `localStorage` para recuperar a sessão após refresh; interceptor do Axios envia `Authorization`.
-- `401 SESSION_EXPIRED` → limpa a sessão e redireciona para `/login?redirect=…`, preservando o carrinho (no servidor simulado) e o rascunho do checkout (`sessionStorage`).
-- Carrinho de visitante identificado por `guestCartId`; ao logar, `POST /cart/merge`.
+Código em `features/auth/session.ts` (sem React) e `features/auth/queries.ts` (hooks).
+
+- **Onde fica o token:** a sessão inteira (`{ token, user, expiresAt }`) em `localStorage`, chave `cn-toon-vault:session`, validada pelo schema na leitura. O interceptor do Axios envia `Authorization` com o token que a feature passa por `setAccessToken`.
+- **Restauração:** o `beforeLoad` da raiz faz `ensureQueryData(sessionQuery())`. Sem token salvo, a sessão é `null` sem requisição. Com token, `GET /auth/session` valida e atualiza o usuário salvo.
+- **Falha transitória na restauração:** só 401 desloga (limpa o token e a sessão vira `null`). Rede, timeout, 5xx ou resposta fora do contrato mantêm o usuário salvo, sem retry e sem quebrar a app. Se o token de fato caiu, o próximo 401 de qualquer requisição encerra a sessão pelo fluxo de expiração. A exceção é uma sessão salva com `expiresAt` já vencido, que vira visitante.
+- **Login e cadastro:** salvam a sessão, chamam `setAccessToken`, removem `['user']` e gravam a sessão no cache. A navegação (para `redirect`) é do componente.
+- **Logout:** `POST /auth/logout` (falha ignorada) e depois `endSession`: limpa storage, token, `['user']` e põe a sessão como `null`. A navegação é do componente.
+- **Expiração (`401 SESSION_EXPIRED` ou `UNAUTHENTICATED`):** `lib/http` expõe `onUnauthorized(handler)` e não conhece features. O handler é registrado no `bootstrap` (`handleSessionExpiry`), roda `endSession` e navega para `/login` com `search: { redirect: router.state.location.href, reason: 'expired' }`, preservando o carrinho (no servidor simulado) e o rascunho do checkout (`sessionStorage`). Usa só APIs do router, então vale na hash history (extensão) e na browser history (web). O erro continua sendo rejeitado como `ApiError` para quem fez a requisição.
+  - Só conta o 401 de uma requisição que levou o token **atual**. Quando várias expiram juntas, a primeira limpa o token e as outras já não batem, então há um redirect só. Respostas atrasadas de uma sessão anterior (após logout ou troca de usuário) são ignoradas. Já em `/login`, não navega, para não trocar o `redirect` por `/login`.
+  - `GET /auth/session` e `POST /auth/logout` pedem `skipUnauthorizedHandler`: tratam o próprio 401.
+  - Limitação aceita: um 401 que chegue durante o próprio `POST /auth/logout` (outra requisição processada depois do fim da sessão no servidor) ainda dispara o fluxo de expiração: o usuário sai do mesmo jeito, mas pode cair em `/login` com o aviso de sessão expirada. A janela é a latência do logout; não compensa o custo de evitar.
+- **Rotas privadas:** layout `_authenticated` com `beforeLoad` que faz `ensureQueryData(sessionQuery())` e, se for `null`, `redirect` para `/login?redirect=<location.href>`. Devolve `{ user }` no contexto das rotas filhas.
+- **Socket (Fase 4):** `endSession` é o ponto em que o socket da sessão será desconectado (comentário no código), cobrindo logout, troca de usuário e expiração.
+- Carrinho de visitante identificado por `guestCartId`; ao logar, `POST /cart/merge` (Fase 4).
 - O mock guarda senhas apenas como hash (Web Crypto, SHA-256 + salt).
 
 ## 8. Mocks (MSW)

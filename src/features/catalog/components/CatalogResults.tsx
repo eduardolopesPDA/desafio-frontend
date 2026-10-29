@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { errorMessage } from '@/lib/http'
 import { catalogQueries } from '../queries'
 import { CatalogPagination } from './CatalogPagination'
-import { NftCard, NftCardSkeleton } from './NftCard'
+import { NftCard, NftCardSkeleton, type NftCardAction } from './NftCard'
 
 const GRID = 'grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3'
 const PAGE_SIZE = 12
@@ -15,10 +15,12 @@ export function CatalogResults({
   params,
   onClearFilters,
   onPageChange,
+  cardAction,
 }: {
   params: NftListParams
   onClearFilters: () => void
   onPageChange: () => void
+  cardAction?: NftCardAction
 }) {
   const list = useQuery(catalogQueries.list(params))
 
@@ -82,7 +84,7 @@ export function CatalogResults({
         <ul className={`${GRID} transition-opacity ${updating ? 'opacity-60' : ''}`}>
           {items.map((nft) => (
             <li key={nft.id}>
-              <NftCard nft={nft} />
+              <NftCard nft={nft} action={cardAction} />
             </li>
           ))}
         </ul>

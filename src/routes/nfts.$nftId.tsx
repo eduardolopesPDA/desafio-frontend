@@ -5,6 +5,7 @@ import { SHOW_NAMES } from '@/contracts'
 import { ErrorPanel, NotFoundPanel } from '@/components/feedback'
 import { Price } from '@/components/Price'
 import { RarityBadge } from '@/components/RarityBadge'
+import { ToonStarButton } from '@/features/favorites/components/ToonStarButton'
 import { NftAttributes } from '@/features/nft/components/NftAttributes'
 import { NftDetailSkeleton } from '@/features/nft/components/NftDetailSkeleton'
 import { NftGallery } from '@/features/nft/components/NftGallery'
@@ -64,7 +65,10 @@ function NftDetailPage() {
             <RarityBadge rarity={nft.rarity} />
             <span className="font-bold">{SHOW_NAMES[nft.show]}</span>
           </div>
-          <h1 className="mt-3 font-display text-4xl leading-tight sm:text-5xl">{nft.name}</h1>
+          <div className="mt-3 flex items-start justify-between gap-4">
+            <h1 className="min-w-0 font-display text-4xl leading-tight break-words sm:text-5xl">{nft.name}</h1>
+            <ToonStarButton nftId={nft.id} nftName={nft.name} size="lg" className="mt-1 shrink-0" />
+          </div>
           <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-lg">
             <dt className="font-bold">Personagem</dt>
             <dd>{nft.character}</dd>

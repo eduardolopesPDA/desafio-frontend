@@ -2,14 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { errorMessage } from '@/lib/http'
 import { catalogQueries } from '../queries'
-import { NftCard, NftCardSkeleton } from './NftCard'
+import { NftCard, NftCardSkeleton, type NftCardAction } from './NftCard'
 
 const FEATURED_SLOTS = 3
 // No celular, os destaques deslizam na horizontal em vez de empilhar três cartões grandes.
 const ROW = 'flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0'
 const SLOT = 'w-[78%] shrink-0 snap-start sm:w-auto'
 
-export function FeaturedNfts() {
+export function FeaturedNfts({ cardAction }: { cardAction?: NftCardAction }) {
   const featured = useQuery(catalogQueries.featured())
 
   if (featured.isError) {
@@ -33,7 +33,7 @@ export function FeaturedNfts() {
           ))
         : featured.data.map((nft, index) => (
             <li key={nft.id} className={SLOT}>
-              <NftCard nft={nft} priority={index === 0} />
+              <NftCard nft={nft} priority={index === 0} action={cardAction} />
             </li>
           ))}
     </ul>
